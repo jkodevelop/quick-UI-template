@@ -11,8 +11,6 @@ const rename = require('gulp-rename');
 const glob = require('glob');
 const es = require('event-stream');
 
-npm install --save-dev gulp-rename glob event-stream
-
 function clean(done){
   fsExtra.emptyDirSync('./publish');
   done();
