@@ -32,11 +32,9 @@ function clean(done){
 
 function sassTask(){
   return src('./src/scss/**/*.scss', { allowEmpty: true })
-      .pipe(sass()) // process sass 
-      // .pipe(cssnano()) // then minimize the css
-      // concat file order by alphabet
-      .pipe(gulpConcat('style.css')) // combine all css to one, name it style.css
-      .pipe(dest('./publish/css')); // then copy to this location
+      .pipe(sass())
+      // .pipe(gulpConcat('style.css')) // combine all css to one, name it style.css, concat files order by alphabet
+      .pipe(dest('./publish/css'));
 }
 
 function copyStatic() {
@@ -45,14 +43,11 @@ function copyStatic() {
 }
 
 function watchActivities() {
-  noCleanBuild();
   watch('./src/scss/**/*.scss', { delay: 750 }, sassTask);
   watch('./src/static/**/*', copyStatic);
 }
 
 function sassInject(){
-  // stream data to static server using browser-sync.create().steam()
-  // this allows browser-sync 
   return sassTask().pipe(browserSync.stream());
 }
 
@@ -67,31 +62,21 @@ function browserSyncServer(){
     }
   });
 
-  // this in essence takes over watchActivities() because it will also inject the data to the browser using browser-sync
+  // in-essence this takes over watchActivities() because it will also inject the data to the browser using browser-sync
   watch("./src/scss/**/*.scss", { delay: 250 }, sassInject); // watch scss changes, then inject the updated new css file to browser without refresh
-  watch('./src/static/**/*', series(copyStatic, reloadServer)); // this is to force a reload on the browser if any new static content is updated
+  watch('./src/static/**/*', series(copyStatic, reloadServer)); // this is to force a reload on the browser if any new static content is updated like a new .html
 }
 // dev (gulp task): start by building the files into ./publish folder then run the server
 const dev = series(clean,parallel(sassTask, copyStatic), browserSyncServer);
-
+// just build and put processed files into ./publish
 const build = series(clean,parallel(sassTask, copyStatic));
 
-// special case for use in watchActivities() 
-// added because web-ext runner for Firefox web-extension development needs ./publish/manifest.json to exist to load
-// if you clean while running web-ext, then firefox won't be able to import and setup the Web Extension
-// $ npm run webext
-const noCleanBuild = parallel(sassTask, copyStatic); 
+// these "exports" just allows you to run gulp commands with different task and configs
+exports.scss = sassTask; // $ gulp scss - just process scss files
+exports.copyStatic = copyStatic; // $ gulp copyStatic - just copy over static files *.html
+exports.build = build; // $ gulp build - process static and scss files and put into ./publish
+exports.watchActivities = watchActivities; // $ gulp watchActivities - continues to watch changes and put files into ./publish
+exports.dev = dev; // $ gulp dev - runs browserSync and watch changes and serve them from ./publish
+exports.clean = clean; // $ gulp clean - empties ./publish
 
-// this allows you to just run sass in command line
-exports.scss = sassTask; // $ gulp sass
-// exports.js = browserActionJS; // $ gulp js
-exports.copyStatic = copyStatic; // $ gulp copyStatic
-
-exports.build = build;
-exports.noCleanBuild = noCleanBuild;
-exports.watchActivities = watchActivities;
-exports.dev = dev;
-
-exports.clean = clean;
-
-exports.default = watchActivities;
+exports.default = dev;
