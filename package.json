@@ -1,0 +1,39 @@
+{
+  "name": "quick-ui-template",
+  "version": "1.0.0",
+  "description": "quick template testing and prototyping",
+  "main": "qulp.js",
+  "scripts": {
+    "start": "gulp dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jkodevelop/quick-UI-template.git"
+  },
+  "keywords": [
+    "html",
+    "template",
+    "gulp",
+    "browserify",
+    "scss",
+    "quick",
+    "prototyping"
+  ],
+  "author": "Jason Ko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jkodevelop/quick-UI-template/issues"
+  },
+  "homepage": "https://github.com/jkodevelop/quick-UI-template#readme",
+  "devDependencies": {
+    "@babel/core": "^7.18.9",
+    "babelify": "^10.0.0",
+    "browser-sync": "^2.27.10",
+    "browserify": "^17.0.0",
+    "fs-extra": "^10.1.0",
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^5.1.0",
+    "sass": "^1.53.0"
+  }
+}
