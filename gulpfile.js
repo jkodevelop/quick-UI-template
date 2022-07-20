@@ -3,31 +3,35 @@ const browserSync = require('browser-sync').create();
 const sass = require('gulp-sass')(require('sass'));
 const gulpConcat = require('gulp-concat');
 const fsExtra = require('fs-extra');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const source = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
+const rename = require('gulp-rename');
+const glob = require('glob');
+const es = require('event-stream');
 
-// function jsTask(pattern, outPath, params){
-//   return src(pattern, { allowEmpty: true })
-//       .pipe(gulpSourcemap.init())
-//       .pipe(gulpBrowserify())
-//       .pipe(gulpBabel({
-//         presets: ['@babel/env']
-//       })) // babel process bundle
-//       .pipe(gulpUglify())
-//       .pipe(gulpSourcemap.write('.', {
-//         mapFile: function(mapFilePath) {
-//           // source map files are named *.map instead of *.js.map
-//           return mapFilePath.replace(params.mapSource, params.mapDest);
-//         }
-//       }))
-//       .pipe(gulpRename({
-//         basename: params.renameBasename,
-//         suffix: params.renameSuffix
-//       })) // rename javascript to script.min.js
-//       .pipe(dest(outPath)); // then copy to this location
-// }
+npm install --save-dev gulp-rename glob event-stream
 
 function clean(done){
   fsExtra.emptyDirSync('./publish');
   done();
+}
+
+function jsTask(){
+  let b = browserify({
+    entries: './src/js/index.js',
+    debug: true,
+    // defining transforms here will avoid crashing your stream
+    transform: [babelify.configure({
+      presets: ['@babel/preset-env']
+    })]
+  });
+
+  return b.bundle()
+    .pipe(source('./script.js')) // name of file we want to combine all from browserify to
+    .pipe(buffer())
+    .pipe(dest('./publish/js/'));
 }
 
 function sassTask(){
@@ -45,12 +49,15 @@ function copyStatic() {
 function watchActivities() {
   watch('./src/scss/**/*.scss', { delay: 750 }, sassTask);
   watch('./src/static/**/*', copyStatic);
+  watch('./src/js/**/*.js', { delay: 750 }, jsTask);
 }
 
+function jsInject(){
+  return jsTask().pipe(browserSync.stream());
+}
 function sassInject(){
   return sassTask().pipe(browserSync.stream());
 }
-
 function reloadServer() {
   return browserSync.reload();
 }
@@ -58,21 +65,23 @@ function browserSyncServer(){
   // static server
   browserSync.init({
     server: {
-        baseDir: "./publish"
+      baseDir: './publish'
     }
   });
 
   // in-essence this takes over watchActivities() because it will also inject the data to the browser using browser-sync
-  watch("./src/scss/**/*.scss", { delay: 250 }, sassInject); // watch scss changes, then inject the updated new css file to browser without refresh
+  watch('./src/scss/**/*.scss', { delay: 350 }, sassInject); // watch scss changes, then inject the updated new css file to browser without refresh
   watch('./src/static/**/*', series(copyStatic, reloadServer)); // this is to force a reload on the browser if any new static content is updated like a new .html
+  watch('./src/js/**/*.js', { delay: 350 }, jsInject); // watch js changes, then inject the updated new js file into ./publish
 }
 // dev (gulp task): start by building the files into ./publish folder then run the server
-const dev = series(clean,parallel(sassTask, copyStatic), browserSyncServer);
+const dev = series(clean, parallel(sassTask, jsTask, copyStatic), browserSyncServer);
 // just build and put processed files into ./publish
-const build = series(clean,parallel(sassTask, copyStatic));
+const build = series(clean, parallel(sassTask, jsTask, copyStatic));
 
-// these "exports" just allows you to run gulp commands with different task and configs
+// these 'exports' just allows you to run gulp commands with different task and configs
 exports.scss = sassTask; // $ gulp scss - just process scss files
+exports.js = jsTask; // $ gulp js - just process js files
 exports.copyStatic = copyStatic; // $ gulp copyStatic - just copy over static files *.html
 exports.build = build; // $ gulp build - process static and scss files and put into ./publish
 exports.watchActivities = watchActivities; // $ gulp watchActivities - continues to watch changes and put files into ./publish
