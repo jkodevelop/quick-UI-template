@@ -10,26 +10,42 @@ const buffer = require('vinyl-buffer');
 const rename = require('gulp-rename');
 const glob = require('glob');
 const es = require('event-stream');
+const path = require('path');
 
 function clean(done){
   fsExtra.emptyDirSync('./publish');
   done();
 }
 
-function jsTask(){
-  let b = browserify({
-    entries: './src/js/index.js',
-    debug: true,
-    // defining transforms here will avoid crashing your stream
-    transform: [babelify.configure({
-      presets: ['@babel/preset-env']
-    })]
-  });
+function jsTask(done){
 
-  return b.bundle()
-    .pipe(source('./script.js')) // name of file we want to combine all from browserify to
-    .pipe(buffer())
-    .pipe(dest('./publish/js/'));
+  glob('./src/js/main-**.js', function(err, files) {
+    if(err) done(err);
+
+    let tasks = files.map(function(entry) {
+
+      let b = browserify({
+        entries: [entry],
+        debug: true,
+        // defining transforms here will avoid crashing your stream
+        transform: [babelify.configure({
+          presets: ['@babel/preset-env']
+        })]
+      });
+
+      const sourceEntry = path.basename(entry);
+      // console.log(entry, sourceEntry);
+      return b.bundle()
+          .pipe(source(sourceEntry))
+          .pipe(rename({
+              extname: '.bundle.js'
+          }))
+          .pipe(dest('./publish/js/'));
+      });
+
+    es.merge(tasks).on('end', done);
+
+  });
 }
 
 function sassTask(){
