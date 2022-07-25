@@ -1,6 +1,8 @@
 const { src, dest, series, parallel, watch } = require('gulp');
 const browserSync = require('browser-sync').create();
 const sass = require('gulp-sass')(require('sass'));
+const postcss = require('gulp-postcss');
+const autoprefixer = require('autoprefixer');
 const gulpConcat = require('gulp-concat');
 const fsExtra = require('fs-extra');
 const browserify = require('browserify');
@@ -50,7 +52,10 @@ function jsTask(done){
 
 function sassTask(){
   return src('./src/scss/**/*.scss', { allowEmpty: true })
-      .pipe(sass())
+      .pipe(sass().on('error', function(err){
+      log.error(err.message);
+      }))
+      .pipe(postcss([autoprefixer]))
       // .pipe(gulpConcat('style.css')) // combine all css to one, name it style.css, concat files order by alphabet
       .pipe(dest('./publish/css'));
 }
@@ -72,8 +77,9 @@ function jsInject(){
 function sassInject(){
   return sassTask().pipe(browserSync.stream());
 }
-function reloadServer() {
-  return browserSync.reload();
+function reloadServer(done) {
+  browserSync.reload();
+  done();
 }
 function browserSyncServer(){
   // static server
