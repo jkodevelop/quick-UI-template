@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <body>
+
+  <h1>EXAMPLE of using file include</h1>
+
+  @@include('./view.html')
+
+  <div>
+  @@include('./var.html', {
+    "name": "haoxin",
+    "age": 12345,
+    "socials": {
+      "fb": "facebook.com/include",
+      "tw": "twitter.com/include"
+    }
+  })
+  </div>
+
+  </body>
+</html>

@@ -8,3 +8,7 @@ https://github.com/gulpjs/gulp/blob/master/docs/recipes/browserify-transforms.md
 `gulp and browserify updated`
 
 https://fettblog.eu/gulp-browserify-multiple-bundles/
+
+**adding file include functions**
+
+https://github.com/haoxins/gulp-file-include

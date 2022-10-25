@@ -30,3 +30,23 @@ edit gulpfile.js to further add function for development
 3. **./src/scss/\*.js** this is where to put the starting js files. use the format `main-***.js` to create a separate bundle. 
 
 Example: if `templateA.html` needs its own js bundle then create and name `main-A.js` as a starting js. Once bundled and transpiled include `main-A.bundle.js` from the html file <script>. This way different template can have different bundles but allow development of shared libraries.
+
+### Extra Feature: file include
+
+**usage**
+
+Inside the html file (example: template.html)
+```
+  @@include('./view.html')
+
+  @@include('./var.html', {
+    "name": "haoxin",
+    "age": 12345,
+    "socials": {
+      "fb": "facebook.com/include",
+      "tw": "twitter.com/include"
+    }
+  })
+```
+
+source: https://github.com/haoxins/gulp-file-include

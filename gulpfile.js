@@ -13,6 +13,7 @@ const rename = require('gulp-rename');
 const glob = require('glob');
 const es = require('event-stream');
 const path = require('path');
+const fileinclude = require('gulp-file-include');
 
 function clean(done){
   fsExtra.emptyDirSync('./publish');
@@ -61,7 +62,11 @@ function sassTask(){
 }
 
 function copyStatic() {
-  return src('./src/static/**/*', { allowEmpty: true }) 
+  return src('./src/static/**/*', { allowEmpty: true })
+      .pipe(fileinclude({
+        prefix: '@@',
+        basepath: '@file'
+      }))
       .pipe(dest('./publish'));
 }
 
